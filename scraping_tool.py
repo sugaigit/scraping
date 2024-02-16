@@ -90,9 +90,9 @@ def main():
                     # job_title
                     data[2] = find_element(elem, By.CLASS_NAME, "jobTitle").text
                     # company_name
-                    data[3] = find_element(elem, By.CLASS_NAME, "companyName").text
+                    data[3] = find_element(elem, By.CSS_SELECTOR, "a[data-tn-element='companyName']").text
                     # company_location
-                    data[4] = ",".join([find_element(elem, By.CLASS_NAME, "companyLocation").text])
+                    data[4] = find_element(elem, By.CSS_SELECTOR, "div[data-testid='icon-location'] > div").text
 
                     url = None
                     try:
@@ -113,9 +113,9 @@ def main():
                         finally:
                             d.close()
                             d.switch_to.window(d.window_handles[0])  # switch original tab
-
+                            
                     # salary_snippet
-                    salary_snippet = find_elements(elem, By.CLASS_NAME, "salary-snippet")
+                    salary_snippet = find_elements(elem, By.CLASS_NAME, "salary-snippet-container")
                     data[5] = None if len(salary_snippet) == 0 else salary_snippet[0].text
 
                     # job_type
@@ -123,9 +123,12 @@ def main():
                     data[6] = None if len(job_type_a) == 0 else job_type_a[-1].text
 
                     # application_tag
-                    data[7] = ",".join([x.text for x in find_elements(elem, By.CLASS_NAME, "shelfItem")])
+                    data[7] = ",".join([x.text for x in find_elements(elem, By.CSS_SELECTOR, ".jobsearch-JobCard-tagContainer > span")])
+                    print("application_tag取得")
+
                     # job_snippet
-                    data[8] = find_element(elem, By.CLASS_NAME, "job-snippet").text
+                    data[8] = "取得不可"
+                    print("job_snippet取得")
 
                     try:
                         url = f"https://jp.indeed.com/viewjob?jk={data[1]}"
@@ -134,16 +137,19 @@ def main():
 
                         # job_tag
                         data[9] = ",".join([x.text.replace(",", "_") for x in find_elements(d, By.CLASS_NAME, "css-8fx8lh")])
+                        print("job_tag取得")
+                        ssdb.insert_data(data)
+                        print("インサート！")
+
                     finally:
                         d.close()
                         d.switch_to.window(d.window_handles[0])  # switch original tab
 
                     logger.info(f"Register job id={data[1]} | {data[2]}")
-                    ssdb.insert_data(data)
 
                 except NoSuchElementException:
                     # ポップアップ閉じるための処理
-                    find_element(d, By.CLASS_NAME, "css-yi9ndv").click()
+                    #find_element(d, By.CLASS_NAME, "css-yi9ndv").click()
                     logger.info("Close popup")
                     continue
                 except Exception as e:
